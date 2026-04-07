@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Environment secrets (NEVER push passwords!)
+.env
+
+# Audio test files (too large for Git)
+*.wav
+*.aiff
+*.mp3
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Docker volumes
+pgdata/
+redisdata/
