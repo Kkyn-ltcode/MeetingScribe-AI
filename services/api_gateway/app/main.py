@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
     app.state.redis = aioredis.from_url(config.REDIS_URL, decode_responses=True)
     logger.info("Redis connected")
 
-    app.state.transcriber = Transcriber(model_size='tiny')
+    app.state.transcriber = Transcriber(model_size='base')
     logger.info("Transcriber ready")
 
     yield

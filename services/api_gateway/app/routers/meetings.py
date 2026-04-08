@@ -2,7 +2,7 @@ import uuid
 from sqlalchemy import select
 from fastapi import APIRouter
 from ..db import AsyncSessionLocal
-from ..models import Meeting, User, LiveTranscript
+from ..models import Meeting, User, LiveTranscript, Participant
 
 router = APIRouter()
 
@@ -22,7 +22,7 @@ async def create_meeting():
 
         return {
             "id": str(meeting.id),
-            "user_id": str(test_user.id),
+            "room_code": meeting.room_code,
             "status": meeting.status,
             "created_at": str(meeting.created_at)
         }
@@ -40,4 +40,28 @@ async def get_transcripts(meeting_id: str):
         return {
             'meeting_id': meeting_id,
             'transcripts': [t.text for t in all_transcripts]
+        }
+
+@router.post("/meetings/join")
+async def join_meeting(room_code: str, display_name: str, language: str = 'en'):
+    async with AsyncSessionLocal() as session:
+        query = select(Meeting).where(
+            Meeting.room_code == room_code,
+        )
+        meeting = await session.execute(query)
+        meeting = meeting.scalar_one_or_none()
+        
+        participant = Participant(
+            meeting_id=meeting.id,
+            user_id=meeting.user_id,
+            display_name=display_name,
+            language=language
+        )
+
+        session.add(participant)
+        await session.commit()
+
+        return {
+            "meeting_id": participant.meeting_id,
+            "participant_id": participant.id
         }

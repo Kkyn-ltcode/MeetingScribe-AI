@@ -10,7 +10,7 @@ SAMPLE_RATE = 16000
 BYTES_PER_SAMPLE = 2
 
 class Transcriber:
-    def __init__(self, model_size: str = 'tiny', buffer_seconds: float = 3.0):
+    def __init__(self, model_size: str = 'base', buffer_seconds: float = 3.0):
         logger.info(f"Loading Whisper model: {model_size}...")
 
         self.model = WhisperModel(model_size, device="cpu", compute_type="int8")
@@ -24,19 +24,19 @@ class Transcriber:
         self.buffer += audio_chunk
 
         if len(self.buffer) > self.buffer_size:
-            text = self._transcribe_bytes(self.buffer)
+            text, language = self._transcribe_bytes(self.buffer)
             self.buffer = b""
-            return text
+            return (text, language)
         else:
-            return None
+            return (None, None)
 
     def flush(self) -> str | None:
         if len(self.buffer) > BYTES_PER_SAMPLE * SAMPLE_RATE * 0.5:
-            text = self._transcribe_bytes(self.buffer)
+            text, language = self._transcribe_bytes(self.buffer)
             self.buffer = b""
-            return text
+            return (text, language)
         self.buffer = b""
-        return None
+        return (None, None)
         
     def _transcribe_bytes(self, audio_bytes: bytes) -> str:
         audio_array = np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float32) / 32768.0
@@ -45,4 +45,5 @@ class Transcriber:
 
         text = " ".join([segment.text.strip() for segment in segments])
 
-        return text if text else "[silence]"
+        detected_language = info.language
+        return (text if text else "[silence]", detected_language)
